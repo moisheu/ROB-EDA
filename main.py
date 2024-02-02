@@ -5,6 +5,15 @@ import ast
 import warnings 
 import xgbr
 import xgbc
+import rf
+import logreg
+import lgbm
+import nb
+import mlr 
+import svr
+import rfr 
+import lgbmr
+
 warnings.filterwarnings("ignore")
 
 #Setting up configuration settings 
@@ -25,8 +34,9 @@ for trust in trust_list:
 
     #Start Kprototypes --> Not using kprototypes for now, commented out
     #kprototypes.kprototypes(df)
-
     #Retrieve target variable and training data 
+
+    #REGRESSORS----------------------------------------------
     if config.getboolean('XGB', 'regressor'):
         y = df[f'{trust}']
         #Drop encoded and nonencoded version of the target variable 
@@ -36,6 +46,42 @@ for trust in trust_list:
     else:
         pass
 
+    if config.getboolean('MLR', 'regressor'):
+        y = df[f'{trust}']
+        #Drop encoded and nonencoded version of the target variable 
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XBG Regressor 
+        mlr.mlr_complete(config, X, y, trust)
+    else:
+        pass
+
+    if config.getboolean('SVR', 'regressor'):
+        y = df[f'{trust}']
+        #Drop encoded and nonencoded version of the target variable 
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XBG Regressor 
+        svr.svr_complete(config, X, y, trust)
+    else:
+        pass
+
+    if config.getboolean('RFR', 'regressor'):
+        y = df[f'{trust}']
+        #Drop encoded and nonencoded version of the target variable 
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XBG Regressor 
+        rfr.rfr_complete(config, X, y, trust)
+    else:
+        pass
+
+    if config.getboolean('LGBMR', 'regressor'):
+        y = df[f'{trust}']
+        #Drop encoded and nonencoded version of the target variable 
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XBG Regressor 
+        lgbmr.lgbmr_complete(config, X, y, trust)
+    else:
+        pass
+    #CLASSIFIERS----------------------------------------------
     if config.getboolean('XGBClassifier', 'classifier'): 
         #temporary fix--- 
         y = df[f'{trust}_encoded']
@@ -51,5 +97,41 @@ for trust in trust_list:
             pass
         #XGB Classifier
         xgbc.xgbc_complete(config, X, y, trust)
+    else:
+        pass
+
+    if config.getboolean('RandomForest', 'classifier'): 
+        y = df[f'{trust}_encoded']
+        #Drop encoded and nonencoded version of the target variable
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XGB Classifier
+        rf.rfc_complete(config, X, y, trust)
+    else:
+        pass
+
+    if config.getboolean('LogisticRegression', 'classifier'): 
+        y = df[f'{trust}_encoded']
+        #Drop encoded and nonencoded version of the target variable
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XGB Classifier
+        logreg.logreg_complete(config, X, y, trust)
+    else:
+        pass
+    
+    if config.getboolean('LightGBM', 'classifier'): 
+        y = df[f'{trust}_encoded']
+        #Drop encoded and nonencoded version of the target variable
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XGB Classifier
+        lgbm.lgbm_complete(config, X, y, trust)
+    else:
+        pass
+
+    if config.getboolean('NativeBayes', 'classifier'): 
+        y = df[f'{trust}_encoded']
+        #Drop encoded and nonencoded version of the target variable
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        #XGB Classifier
+        nb.nb_complete(config, X, y, trust)
     else:
         pass

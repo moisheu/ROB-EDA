@@ -115,7 +115,7 @@ def xgbc_complete(config, X, y, y_str):
       y_pred = model.predict(X_test)
       #Evaluate performance
       accuracy, precision, recall, f1 = tree_performance_classification(y_test, y_pred)
-      print(f'Acc: {accuracy}, Prec: {precision}, Rec: {recall}, F1: {f1}')
+      print(f'XGB: Acc: {accuracy}, Prec: {precision}, Rec: {recall}, F1: {f1}')
       #evalate feature importance
       export_and_plot_feature_importances(model, X, y_str)
       #shap_vis(model, X_train, y_str)
