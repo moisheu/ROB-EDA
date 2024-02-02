@@ -99,7 +99,7 @@ def xgb_complete(config, X, y, y_str):
 
       #Evaluate performance
       RMSE, MSE, MAE = tree_performance(y_test, y_pred)
-      print(f'RMSE: {RMSE}, MSE: {MSE}, MAE: {MAE}')
+      print(f'MSE: {MSE}, RMSE: {RMSE}, MAE: {MAE}')
 
       #Plot actual vs predicted values
       plt.figure(figsize=(8, 8))
