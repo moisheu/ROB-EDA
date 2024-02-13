@@ -34,6 +34,7 @@ def regression_performance(y_test, y_pred):
     return mse, mae, rmse
 
 def shap_vis(model, X_train, y_str):
+    # Note: SHAP with SVR requires using KernelExplainer, which can be computationally expensive and less accurate
     explainer = shap.KernelExplainer(model.predict, X_train)
     shap_values = explainer.shap_values(X_train)
 

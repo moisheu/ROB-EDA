@@ -13,24 +13,37 @@ import mlr
 import svr
 import rfr 
 import lgbmr
+import data_segmentation
 
 warnings.filterwarnings("ignore")
 
 #Setting up configuration settings 
 config = utils.config_setup()
-df, ns_df = utils.load_dataframe(config)
-#apply binary encoding 
-#merged_df = utils.merge_dataframes_for_encoding(df,ns_df,config)
-#apply multiclass encoding 
-df = utils.apply_encoding(config , df)
-#drop necessary columns 
-utils.drop_columns(df, config)
+
+#experimental segmentation
+data_segmentation.segmentation(config, 'top_five_segmentation')
+
+if config.getboolean('preprocessing','preprocessing_whole'):
+    df, ns_df = utils.load_dataframe(config)
+    #apply binary encoding 
+    #merged_df = utils.merge_dataframes_for_encoding(df,ns_df,config)
+    #apply multiclass encoding 
+    df = utils.apply_encoding(config , df)
+    #drop necessary columns 
+    utils.drop_columns(df, config)
 
 trust_list = ast.literal_eval(config['general']['trust_list'])
 xgb_evaluation_df = pd.DataFrame(columns = ['Component','RMSE','MSE','MAE'])
+
 for trust in trust_list:
-    print(f'BEGINNING TRAINING FOR {trust} -------------------------------------------------------------------------------------------')
-    df = pd.read_csv(fr'data\post_processing\driver\{trust}_driver.csv')
+    if config.getboolean('segmentation','segmentation_training'):
+        segment = 'topfive'
+        print(f'BEGINNING SEGMENTED TRAINING FOR {trust} -------------------------------------------------------------------------------------------')
+        df = pd.read_csv(fr'data\experimental_segmentation\top_five\{trust}_{segment}.csv')
+    else:
+        print(f'BEGINNING TRAINING FOR {trust} -------------------------------------------------------------------------------------------')
+        df = pd.read_csv(fr'data\post_processing\driver\{trust}_driver.csv')
+
 
     #Start Kprototypes --> Not using kprototypes for now, commented out
     #kprototypes.kprototypes(df)
@@ -90,7 +103,7 @@ for trust in trust_list:
         else:
             pass
         #Drop encoded and nonencoded version of the target variable
-        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        X = utils.get_X(config, df, trust)
         if 'Composite.Trust.Human_encoded' in X.columns.tolist():
             X['Composite.Trust.Human_encoded'] =  X['Composite.Trust.Human_encoded'].replace(2, 1)
         else:
@@ -103,7 +116,7 @@ for trust in trust_list:
     if config.getboolean('RandomForest', 'classifier'): 
         y = df[f'{trust}_encoded']
         #Drop encoded and nonencoded version of the target variable
-        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        X = utils.get_X(config, df, trust)
         #XGB Classifier
         rf.rfc_complete(config, X, y, trust)
     else:
@@ -112,7 +125,7 @@ for trust in trust_list:
     if config.getboolean('LogisticRegression', 'classifier'): 
         y = df[f'{trust}_encoded']
         #Drop encoded and nonencoded version of the target variable
-        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        X = utils.get_X(config, df, trust)
         #XGB Classifier
         logreg.logreg_complete(config, X, y, trust)
     else:
@@ -121,7 +134,7 @@ for trust in trust_list:
     if config.getboolean('LightGBM', 'classifier'): 
         y = df[f'{trust}_encoded']
         #Drop encoded and nonencoded version of the target variable
-        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        X = utils.get_X(config, df, trust)
         #XGB Classifier
         lgbm.lgbm_complete(config, X, y, trust)
     else:
@@ -130,7 +143,7 @@ for trust in trust_list:
     if config.getboolean('NativeBayes', 'classifier'): 
         y = df[f'{trust}_encoded']
         #Drop encoded and nonencoded version of the target variable
-        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        X = utils.get_X(config, df, trust)
         #XGB Classifier
         nb.nb_complete(config, X, y, trust)
     else:

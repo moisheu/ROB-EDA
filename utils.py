@@ -11,7 +11,7 @@ def config_setup():
       config.read('config.ini')
       return config 
 
-def load_dataframe(config):
+def load_dataframe(config):    
     df = pd.read_csv(config['preprocessing']['dataframe_path'])
     non_standard_df = pd.read_csv(config['preprocessing']['nonstandard_dataframe_path'])
     return df , non_standard_df
@@ -111,25 +111,39 @@ def get_dataframes(config):
         df = load_dataframe(config)
         drop_columns(df, config)
 
-def apply_encoding(config, df):
-    def encode(x):
-        threshold_lowmed = df[column].quantile([0.33,.66])[0.33]
-        threshold_medhigh =  df[column].quantile([0.33,.66])[.66]
-
+def apply_encoding(config, df=None, name=None):
+    def encode(x):      
+        quantiles = df[column].quantile([0.33, 0.66]) 
+        threshold_lowmed = quantiles.loc[0.33]
+        threshold_medhigh = quantiles.loc[0.66]
         if x >= threshold_medhigh:
             return '2'
-        elif (x<threshold_medhigh) and (x >= threshold_lowmed):
+        elif threshold_lowmed <= x < threshold_medhigh:
             return '1'
-        elif x<threshold_lowmed:
-            return '0'
         else:
-            raise ValueError("Number cannot exceed threshold values")
-    #Take target cols and responseID from raw df
-    category_dict = ast.literal_eval(config['general']['category_dictionary'])
-    target_col_list = category_dict['trust']
-    for column in target_col_list:
+            return '0'
+        
+    if config.getboolean('segmentation', 'segmentation_training'):
+        column = name
+        print(f"Encoding column: {column}")
         df[f'{column}_encoded'] = df[column].apply(encode)
-        if len(df[f'{column}_encoded'].unique()) == 2:
-            df[f'{column}_encoded'] = df[f'{column}_encoded'].replace(2, 1)
-    return df 
+        df = df.drop(columns=[column])
+    else:
+        category_dict = ast.literal_eval(config['general']['category_dictionary'])
+        target_col_list = category_dict['trust']
+        for column in target_col_list:
+            print(f"Encoding column: {column}")
+            df[f'{column}_encoded'] = df[column].apply(encode)
+            if len(df[f'{column}_encoded'].unique()) == 2:
+                df[f'{column}_encoded'] = df[f'{column}_encoded'].replace({'2': '1'})
+    
+    return df
+
+def get_X(config, df, trust):
+    if config.getboolean('segmentation','segmentation_training'):
+        X= df.drop(columns =[f'{trust}_encoded'], axis=1)
+    else:
+        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+    return X
+
 

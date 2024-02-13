@@ -65,7 +65,7 @@ def shap_vis(model, X_train, y_str):
     explainer = shap.TreeExplainer(model)
     
     #Calculate SHAP values for the test set
-    shap_values = explainer.shap_values(X_train)
+    shap_values = explainer.shap_values(X_train, check_additivity=False)
 
     #Summary plot
     shap.summary_plot(shap_values, X_train, plot_type="bar")
@@ -118,7 +118,7 @@ def xgbc_complete(config, X, y, y_str):
       print(f'XGB: Acc: {accuracy}, Prec: {precision}, Rec: {recall}, F1: {f1}')
       #evalate feature importance
       export_and_plot_feature_importances(model, X, y_str)
-      #shap_vis(model, X_train, y_str)
+      shap_vis(model, X_train, y_str)
       return model, accuracy, precision, recall, f1
     else:
        return None

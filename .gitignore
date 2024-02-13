@@ -15,6 +15,7 @@ results/LGBMR results/*
 results/MLR results/*
 results/RF results/*
 results/RFR results/*
+data/experimental_segmentation/top_five/*
 
 /venv
 /.vscode
@@ -47,3 +48,4 @@ results/RFR results/*
 !results/RF results/.gitkeep
 !results/RFR results/.gitkeep
 !results/SVR results/.gitkeep
+!data/experimental_segmentation/top_five/.gitkeep
