@@ -12,6 +12,8 @@ from sklearn.model_selection import train_test_split
 warnings.filterwarnings("ignore")
 
 def XGBC_train(config, X, y, X_test, y_test, col = None):
+    model = xgb.XGBClassifier(objective = 'multi:softmax' ,  num_class=3, eval_set=[(X_test, y_test)] ,eval_metric='mlogloss', verbosity=0, early_stopping_rounds = 10)
+
     #If bayesian search is enabled in configs, search will start
     if config.getboolean('XGBClassifier','bayesian_search'):
         search_spaces = {
@@ -25,7 +27,7 @@ def XGBC_train(config, X, y, X_test, y_test, col = None):
         }
 
         bayes_search = BayesSearchCV(
-            estimator=model,
+            estimator= model,
             search_spaces=search_spaces,
             scoring='accuracy',
             n_iter=32,
@@ -35,7 +37,6 @@ def XGBC_train(config, X, y, X_test, y_test, col = None):
             refit=True
         )
 
-        model = xgb.XGBClassifier(objective = 'multi:softmax' ,  num_class=3, eval_set=[(X_test, y_test)] ,eval_metric='mlogloss', verbosity=0, early_stopping_rounds = 10)
         np.int = int
         result = bayes_search.fit(X, y, eval_set=[(X_test, y_test)], verbose = False)
         best_score = result.best_score_

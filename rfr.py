@@ -40,7 +40,7 @@ def shap_vis(model, X_train, y_str):
     plt.figure()
     shap.summary_plot(shap_values, X_train, show=False)
     plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\RFR results\{y_str}.png')
+    plt.savefig(fr'results/RFR results/{y_str}.png')
     plt.close()
 
 def rfr_complete(config, X, y, y_str):

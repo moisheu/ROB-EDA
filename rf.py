@@ -23,7 +23,7 @@ def RFC_train(config, X, y, X_test, y_test, col = None):
         model = RandomForestClassifier(random_state=42)
         np.int = int
         #Initialize Bayesian Search
-        bayes_search = BayesSearchCV(rf, search_space, n_iter=32, random_state=42, cv=3)
+        bayes_search = BayesSearchCV(model, search_space, n_iter=32, random_state=42, cv=3)
         #Perform the search on the training data
         result = bayes_search.fit(X, y)
         best_score = result.best_score_
@@ -50,7 +50,7 @@ def shap_vis(model, X_train, y_str):
     plt.figure()
     shap.summary_plot(shap_values, X_train, show=False)
     plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\RF results\{y_str}.png')
+    plt.savefig(fr'results/RF results/{y_str}.png')
     plt.close()
 
 def tree_performance_classification(y_test, y_pred):

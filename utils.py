@@ -35,7 +35,7 @@ def merge_dataframes_for_encoding(df_standardized, df_raw, config):
 
     #Change col names to identify encoding 
     temp_names_list = df_raw_target_cols.columns.tolist()
-    new_names_list = [f'{col}_encoded' if col != 'ResponseID' else col for col in temp_names_list]
+    new_names_list = [f'{col}.encoded' if col != 'ResponseID' else col for col in temp_names_list]
 
     df_raw_target_cols.columns = new_names_list
 
@@ -66,14 +66,16 @@ def drop_columns(df, config):
          logger.info(f'Creating dataframes for {component}')
          temp_df = df 
          temp_list = category_dict['trust'][:]
-         temp_list_encoded = [f'{trust}_encoded' for trust in temp_list]
-         if component != 'Composite.Trust.Human':
-             temp_list.remove(component)
-             temp_list.remove('Composite.Trust.Human')
-         else: 
-             temp_list.remove(component)
+         temp_list_encoded = [f'{trust}.encoded' for trust in temp_list]
+        #  if component != 'Composite.Trust.Human':
+        #      temp_list.remove(component)
+        #      temp_list.remove('Composite.Trust.Human')
+        #  else: 
+        #      temp_list.remove(component)
          
-         temp_list_encoded.remove(f'{component}_encoded')
+         temp_list.remove(component)
+         
+         temp_list_encoded.remove(f'{component}.encoded')
          temp_df = temp_df.drop(columns = temp_list)
          temp_df = temp_df.drop(columns = temp_list_encoded)
          driver_df = temp_df.dropna(axis = 0)
@@ -82,8 +84,8 @@ def drop_columns(df, config):
          #exporting new dfs
          d_export_path  = config['preprocessing']['driver_export_filepath']
          nd_export_path  = config['preprocessing']['nondriver_export_filepath']
-         driver_df.to_csv(d_export_path+fr'\{component}_driver.csv', index=False)
-         non_driver_df.to_csv(nd_export_path+fr'\{component}_nondriver.csv', index=False)
+         driver_df.to_csv(d_export_path+fr'/{component}_driver.csv', index=False)
+         non_driver_df.to_csv(nd_export_path+fr'/{component}_nondriver.csv', index=False)
          logger.info(f'Created and exported {component} dataframes!')
 
 def get_total_df(df):
@@ -125,25 +127,23 @@ def apply_encoding(config, df=None, name=None):
         
     if config.getboolean('segmentation', 'segmentation_training'):
         column = name
-        print(f"Encoding column: {column}")
-        df[f'{column}_encoded'] = df[column].apply(encode)
+        df[f'{column}.encoded'] = df[column].apply(encode)
         df = df.drop(columns=[column])
     else:
         category_dict = ast.literal_eval(config['general']['category_dictionary'])
         target_col_list = category_dict['trust']
         for column in target_col_list:
-            print(f"Encoding column: {column}")
-            df[f'{column}_encoded'] = df[column].apply(encode)
-            if len(df[f'{column}_encoded'].unique()) == 2:
-                df[f'{column}_encoded'] = df[f'{column}_encoded'].replace({'2': '1'})
+            df[f'{column}.encoded'] = df[column].apply(encode)
+            if len(df[f'{column}.encoded'].unique()) == 2:
+                df[f'{column}.encoded'] = df[f'{column}.encoded'].replace({'2': '1'})
     
     return df
 
 def get_X(config, df, trust):
     if config.getboolean('segmentation','segmentation_training'):
-        X= df.drop(columns =[f'{trust}_encoded'], axis=1)
+        X= df.drop(columns =[f'{trust}.encoded'], axis=1)
     else:
-        X= df.drop(columns =[f'{trust}_encoded', trust], axis=1)
+        X= df.drop(columns =[f'{trust}.encoded', trust], axis=1)
     return X
 
 

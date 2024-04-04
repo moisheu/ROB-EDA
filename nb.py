@@ -22,7 +22,7 @@ def shap_vis(model, X_train, y_str):
     plt.figure()
     shap.summary_plot(shap_values, X_train, show=False)
     plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\NB results\{y_str}.png')
+    plt.savefig(fr'results/NB results/{y_str}.png')
     plt.close()
 
 def performance_classification(y_test, y_pred):

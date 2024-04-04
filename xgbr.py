@@ -84,7 +84,7 @@ def get_xgb_importance(model, feature_str):
       importance_df = importance_df.sort_values(by='Importance', ascending=False).reset_index(drop=True)
       importance_df = importance_df.set_index('Feature').T
       importance_df.reset_index(drop=True, inplace=True)
-      importance_df.to_csv(fr'results\XGB figures\feature importance\{feature_str}_feature_importance')
+      importance_df.to_csv(fr'results/XGB figures/feature importance/{feature_str}_feature_importance')
     except Exception as e:
       importance_dict = xgbr.feature_importances_
 
@@ -108,10 +108,10 @@ def xgb_complete(config, X, y, y_str):
       plt.title('Actual vs Predicted Values')
       plt.xlabel('Actual Values')
       plt.ylabel('Predicted Values')
-      plt.savefig(fr'results\XGB figures\accuracy vis\{y_str}_accuracy_visual.png')
+      plt.savefig(fr'results/XGB figures/accuracy vis/{y_str}_accuracy_visual.png')
       plt.close()
       get_xgb_importance(model, y_str)
-      xgbfir.saveXgbFI(model, OutputXlsxFile=fr'C:\Users\takab\Desktop\ROB EDA\results\XGB figures\xgbfir\{y_str}_xgbfir_results.xlsx')
+      xgbfir.saveXgbFI(model, OutputXlsxFile=fr'C:/Users/takab/Desktop/ROB EDA/results/XGB figures/xgbfir/{y_str}_xgbfir_results.xlsx')
       shap_viz(model, X_train, y_str)
       return model, RMSE, MSE, MAE
     else:
@@ -148,7 +148,7 @@ def shap_viz(model, X_train, y_str):
       #Plot summary plot
       fig = shap.summary_plot(shap_values, X_train, feature_names=features,show=False)
       plt.title(f'{y_str} SHAP scores')
-      plt.savefig(fr'results\XGB figures\SHAP\{y_str}.png')
+      plt.savefig(fr'results/XGB figures/SHAP/{y_str}.png')
       plt.close()
 
 
@@ -194,7 +194,7 @@ def perform_kmeans_and_visualize(data, max_clusters=10):
     sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=data, palette='viridis', legend='full', alpha=0.8)
     plt.title('Cluster Visualization with PCA')
     plt.show()
-    plt.savefig(fr'results\XGB figures\kmeans.png')
+    plt.savefig(fr'results/XGB figures/kmeans.png')
 
     return data
 

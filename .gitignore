@@ -3,6 +3,7 @@ data/post_processing/driver/*
 data/post_processing/driver_nozscore/*
 data/post_processing/no_driver/*
 data/semi_raw_data/*
+data/experimental_segmentation/*
 results/XGB figures/accuracy vis/*
 results/XGB figures/feature importance/*
 results/XGB figures/SHAP/*
@@ -26,13 +27,14 @@ data/experimental_segmentation/top_five/*
 .json
 .png
 .ini
-
+.DS_Store
 
 !data/misc_export/.gitkeep
 !data/post_processing/driver/.gitkeep
 !data/post_processing/driver_nozscore/.gitkeep
 !data/post_processing/no_driver/.gitkeep
 !data/semi_raw_data/.gitkeep
+!data/experimental_segmentation/top_five/.gitkeep
 !results/XGB figures/accuracy vis/.gitkeep
 !results/XGB figures/feature importance/.gitkeep
 !results/XGB figures/SHAP/.gitkeep
@@ -48,4 +50,5 @@ data/experimental_segmentation/top_five/*
 !results/RF results/.gitkeep
 !results/RFR results/.gitkeep
 !results/SVR results/.gitkeep
-!data/experimental_segmentation/top_five/.gitkeep
+
+

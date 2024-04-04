@@ -24,7 +24,8 @@ def LGBM_train(config, X, y, X_test, y_test, col=None):
         best_model = bayes_search.best_estimator_
         return best_model
     else:
-        model = LGBMClassifier(n_estimators=100, random_state=42)
+        model = LGBMClassifier(n_estimators=100, random_state=42, force_col_wise=True)
+        X.columns = [col.replace('_', '.') for col in X.columns]
         model = model.fit(X, y)
         return model 
 
@@ -35,7 +36,7 @@ def shap_vis(model, X_train, y_str):
     plt.figure()
     shap.summary_plot(shap_values, X_train, show=False)
     plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\LGBM results\{y_str}.png')
+    plt.savefig(fr'results/LGBM results/{y_str}.png')
     plt.close()
 
 def tree_performance_classification(y_test, y_pred):

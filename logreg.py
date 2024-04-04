@@ -58,7 +58,7 @@ def shap_vis(model, X_train, y_str):
         plt.figure()
         shap.summary_plot(shap_values[i], X_train, show=False)
         plt.title(f'{y_str} Class {i} SHAP Scores')
-        plt.savefig(f'results\LogReg results\SHAP\{y_str}_class_{i}.png')
+        plt.savefig(f'results/LogReg results/SHAP/{y_str}_class_{i}.png')
         plt.close() 
 
 def tree_performance_classification(y_test, y_pred):
