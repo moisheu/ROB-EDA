@@ -66,12 +66,16 @@ def drop_columns(df, config):
          logger.info(f'Creating dataframes for {component}')
          temp_df = df 
          temp_list = category_dict['trust'][:]
+<<<<<<< Updated upstream
          temp_list_encoded = [f'{trust}_encoded' for trust in temp_list]
          if component != 'Composite.Trust.Human':
              temp_list.remove(component)
              temp_list.remove('Composite.Trust.Human')
          else: 
              temp_list.remove(component)
+=======
+         temp_list_encoded = [f'{trust}.encoded' for trust in temp_list]
+>>>>>>> Stashed changes
          
          temp_list_encoded.remove(f'{component}_encoded')
          temp_df = temp_df.drop(columns = temp_list)
@@ -111,17 +115,27 @@ def get_dataframes(config):
         df = load_dataframe(config)
         drop_columns(df, config)
 
+<<<<<<< Updated upstream
 def apply_encoding(config, df):
     def encode(x):
         threshold_lowmed = df[column].quantile([0.33,.66])[0.33]
         threshold_medhigh =  df[column].quantile([0.33,.66])[.66]
 
+=======
+def apply_encoding(config, df=None, name=None):
+    #encode based on third quantiles 
+    def encode(x):      
+        quantiles = df[column].quantile([0.33, 0.66]) 
+        threshold_lowmed = quantiles.loc[0.33]
+        threshold_medhigh = quantiles.loc[0.66]
+>>>>>>> Stashed changes
         if x >= threshold_medhigh:
             return '2'
         elif (x<threshold_medhigh) and (x >= threshold_lowmed):
             return '1'
         elif x<threshold_lowmed:
             return '0'
+<<<<<<< Updated upstream
         else:
             raise ValueError("Number cannot exceed threshold values")
     #Take target cols and responseID from raw df
@@ -132,4 +146,29 @@ def apply_encoding(config, df):
         if len(df[f'{column}_encoded'].unique()) == 2:
             df[f'{column}_encoded'] = df[f'{column}_encoded'].replace(2, 1)
     return df 
+=======
+    
+    #check if segmentation training is enabled 
+    if config.getboolean('segmentation', 'segmentation_training'):
+        column = name
+        df[f'{column}.encoded'] = df[column].apply(encode)
+        df = df.drop(columns=[column])
+    else:
+        category_dict = ast.literal_eval(config['general']['category_dictionary'])
+        target_col_list = category_dict['trust']
+        for column in target_col_list:
+            df[f'{column}.encoded'] = df[column].apply(encode)
+            if len(df[f'{column}.encoded'].unique()) == 2:
+                df[f'{column}.encoded'] = df[f'{column}.encoded'].replace({'2': '1'})
+    
+    return df
+
+def get_X(config, df, trust):
+    if config.getboolean('segmentation','segmentation_training'):
+        X= df.drop(columns =[f'{trust}.encoded'], axis=1)
+    else:
+        X= df.drop(columns =[f'{trust}.encoded', trust], axis=1)
+    return X
+
+>>>>>>> Stashed changes
 

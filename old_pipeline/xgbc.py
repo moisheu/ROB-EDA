@@ -68,9 +68,10 @@ def shap_vis(model, X_train, y_str):
     shap_values = explainer.shap_values(X_train)
 
     #Summary plot
-    shap.summary_plot(shap_values, X_train, plot_type="bar")
+    #shap.summary_plot(shap_values, X_train, plot_type="bar")
+    shap.summary_plot(shap_values, X_train)
     plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\xgbclassifier_results\SHAP\{y_str}.png')
+    plt.savefig(fr'results/xgbclassifier_results/SHAP/{y_str}.png')
     plt.close()
 
 def export_and_plot_feature_importances(best_model, X, y):
@@ -91,7 +92,7 @@ def export_and_plot_feature_importances(best_model, X, y):
     }).sort_values(by='Importance', ascending=False)
 
     #Export to CSV
-    csv_filename = fr'results\xgbclassifier_results\feature importance\feature_importance_csv\{identifier}_feature_importances.csv'
+    csv_filename = fr'results/xgbclassifier_results/feature importance/feature_importance_csv/{identifier}_feature_importances.csv'
     feature_importances_df.to_csv(csv_filename, index=False)
     #print(f"Feature importances exported to {csv_filename}")
 
@@ -100,7 +101,7 @@ def export_and_plot_feature_importances(best_model, X, y):
     plt.yticks(fontsize=5)
     plt.tight_layout()
     plot_importance(best_model, max_num_features=15, importance_type='weight')
-    plot_filename = fr'results\xgbclassifier_results\feature importance\feature_importance_vis\{identifier}_accuracy_visual.png'
+    plot_filename = fr'results/xgbclassifier_results/feature importance/feature_importance_vis/{identifier}_accuracy_visual.png'
     plt.savefig(plot_filename)
     plt.close()
     #print(f"Feature importance plot saved to {plot_filename}")

@@ -1,0 +1,54 @@
+data/misc_export/*
+data/post_processing/driver/*
+data/post_processing/driver_nozscore/*
+data/post_processing/no_driver/*
+data/semi_raw_data/*
+data/experimental_segmentation/*
+results/XGB figures/accuracy vis/*
+results/XGB figures/feature importance/*
+results/XGB figures/SHAP/*
+results/XGB figures/xgbfir/*
+results/xgbclassifier_results/feature importance/feature_importance_csv/*
+results/xgbclassifier_results/feature importance/feature_importance_vis/*
+results/xgbclassifier_results/SHAP/*
+results/LGBM results/*
+results/LGBMR results/*
+results/MLR results/*
+results/RF results/*
+results/RFR results/*
+data/experimental_segmentation/top_five/*
+
+/venv
+/.vscode
+/Rob_EDA.ipynb
+/__pycache__
+/config.ini
+.csv
+.json
+.png
+.ini
+.DS_Store
+
+!data/misc_export/.gitkeep
+!data/post_processing/driver/.gitkeep
+!data/post_processing/driver_nozscore/.gitkeep
+!data/post_processing/no_driver/.gitkeep
+!data/semi_raw_data/.gitkeep
+!data/experimental_segmentation/top_five/.gitkeep
+!results/XGB figures/accuracy vis/.gitkeep
+!results/XGB figures/feature importance/.gitkeep
+!results/XGB figures/SHAP/.gitkeep
+!results/XGB figures/xgbfir/.gitkeep
+!results/xgbclassifier_results/feature importance/feature_importance_csv/.gitkeep
+!results/xgbclassifier_results/feature importance/feature_importance_vis/.gitkeep
+!results/xgbclassifier_results/SHAP/.gitkeep
+!results/LGBM results/.gitkeep
+!results/LGBMR results/.gitkeep
+!results/LogReg results/SHAP/.gitkeep
+!results/MLR results/.gitkeep
+!results/NB results/.gitkeep
+!results/RF results/.gitkeep
+!results/RFR results/.gitkeep
+!results/SVR results/.gitkeep
+
+
