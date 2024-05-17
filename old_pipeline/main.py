@@ -1,5 +1,5 @@
 <<<<<<< Updated upstream:main.py
-import utils
+import old_pipeline.utils as utils
 import pandas as pd
 from sklearn.svm import SVR
 import ast
@@ -137,7 +137,7 @@ for trust in trust_list:
     else:
         pass
 =======
-import utils
+import old_pipeline.utils as utils
 import pandas as pd
 from sklearn.svm import SVR
 import ast
