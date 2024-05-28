@@ -4,7 +4,9 @@ import ast
 import pandas as pd
 import configparser 
 import ast 
+from sklearn.model_selection import KFold
 from sklearn import preprocessing
+import shutil
 
 def config_setup():
       config = configparser.ConfigParser()
@@ -12,9 +14,31 @@ def config_setup():
       return config 
 
 def load_dataframe(config):
-    df = pd.read_csv(config['preprocessing']['dataframe_path'])
-    non_standard_df = pd.read_csv(config['preprocessing']['nonstandard_dataframe_path'])
-    return df , non_standard_df
+    std_df = pd.read_csv(config['preprocessing']['std_path'])
+    raw_df = pd.read_csv(config['preprocessing']['raw_path'])
+    return std_df , raw_df
+
+import os
+import shutil
+
+def clear_directory(directory_path):
+    # Check if the directory exists
+    if not os.path.exists(directory_path):
+        print(f"The directory '{directory_path}' does not exist.")
+        return
+    #iterate dirs 
+    for filename in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, filename)
+        #if file del
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            #if dir, clear and del 
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
+
 
 def merge_dataframes_for_encoding(df_standardized, df_raw, config):
     #Take raw dataframe target cols and responseID from raw df
@@ -51,40 +75,9 @@ def merge_dataframes_for_encoding(df_standardized, df_raw, config):
     return merged_df
 
 def drop_columns(df, config):
-    category_dict = ast.literal_eval(config['general']['category_dictionary'])
-    #global drops 
-    df = df.drop(columns = ['Unnamed: 0', 'Duration.Seconds'])
-    df = df.drop(columns = category_dict['totals_to_drop'])
-
-    #conditional drops, to change drops change in config.ini file 
-    if config.getboolean('preprocessing','drop_parent'):
-        logger.info('Dropping parent categories')
-        df = df.drop(columns = category_dict['parents_categories'])
-
-    #create dataframes     
-    for component in category_dict['trust']: 
-         logger.info(f'Creating dataframes for {component}')
-         temp_df = df 
-         temp_list = category_dict['trust'][:]
-         temp_list_encoded = [f'{trust}_encoded' for trust in temp_list]
-         if component != 'Composite.Trust.Human':
-             temp_list.remove(component)
-             temp_list.remove('Composite.Trust.Human')
-         else: 
-             temp_list.remove(component)
-         
-         temp_list_encoded.remove(f'{component}_encoded')
-         temp_df = temp_df.drop(columns = temp_list)
-         temp_df = temp_df.drop(columns = temp_list_encoded)
-         driver_df = temp_df.dropna(axis = 0)
-         non_driver_df = temp_df[df.isna().any(axis=1)]
-         
-         #exporting new dfs
-         d_export_path  = config['preprocessing']['driver_export_filepath']
-         nd_export_path  = config['preprocessing']['nondriver_export_filepath']
-         driver_df.to_csv(d_export_path+fr'\{component}_driver.csv', index=False)
-         non_driver_df.to_csv(nd_export_path+fr'\{component}_nondriver.csv', index=False)
-         logger.info(f'Created and exported {component} dataframes!')
+    keeplist = ast.literal_eval(config['general']['keeplist'])
+    df = df.filter(items=keeplist)
+    return df
 
 def get_total_df(df):
     col_list = df.columns.tolist()
@@ -111,25 +104,34 @@ def get_dataframes(config):
         df = load_dataframe(config)
         drop_columns(df, config)
 
-def apply_encoding(config, df):
+def apply_encoding(config,df):
+    column = config['general']['target']
+    #encode based on 2 classes
     def encode(x):
-        threshold_lowmed = df[column].quantile([0.33,.66])[0.33]
-        threshold_medhigh =  df[column].quantile([0.33,.66])[.66]
-
-        if x >= threshold_medhigh:
-            return '2'
-        elif (x<threshold_medhigh) and (x >= threshold_lowmed):
-            return '1'
-        elif x<threshold_lowmed:
-            return '0'
+        quantiles = df[column].quantile([.5])
+        threshold = quantiles.loc[0.5]
+        if x >= threshold:
+            return 1
         else:
-            raise ValueError("Number cannot exceed threshold values")
-    #Take target cols and responseID from raw df
-    category_dict = ast.literal_eval(config['general']['category_dictionary'])
-    target_col_list = category_dict['trust']
-    for column in target_col_list:
-        df[f'{column}_encoded'] = df[column].apply(encode)
-        if len(df[f'{column}_encoded'].unique()) == 2:
-            df[f'{column}_encoded'] = df[f'{column}_encoded'].replace(2, 1)
-    return df 
+            return 0
+    df.loc[:, f'{column}.encoded'] = df[column].apply(encode)
+    return df    
+
+def split_into_kfolds(df, k):
+    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    fold_indices = list(kf.split(df))
+
+    for i, (train_index, test_index) in enumerate(fold_indices):
+        train_df = df.iloc[train_index]
+        test_df = df.iloc[test_index]
+        
+        train_path = f'data/kfold/train/train_fold_{i+1}.csv'
+        test_path = f'data/kfold/test/test_fold_{i+1}.csv'
+        
+        train_df.to_csv(train_path, index=False)
+        test_df.to_csv(test_path, index=False)
+        
+        print(f'Saved fold {i+1} to {train_path} and {test_path}')
+    
+    return fold_indices
 

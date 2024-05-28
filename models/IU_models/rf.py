@@ -53,12 +53,14 @@ def shap_vis(model, X_train, y_str):
     plt.savefig(fr'results\RF results\{y_str}.png')
     plt.close()
 
-def tree_performance_classification(y_test, y_pred):
+def performance_classification(y_test, y_pred):
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred, average='weighted')
     recall = recall_score(y_test, y_pred, average='weighted')
     f1 = f1_score(y_test, y_pred, average='weighted')
     return accuracy, precision, recall, f1
+
+
 
 def rfc_complete(config, X, y, y_str):
     if (config.getboolean('RandomForest', 'classifier')) and (config.getboolean('RandomForest', 'bayesian_search') == False):

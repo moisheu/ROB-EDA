@@ -9,6 +9,9 @@ from skopt import BayesSearchCV
 from skopt.space import Real,  Integer
 from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
 warnings.filterwarnings("ignore")
 
 def XGBC_train(config, X, y, X_test, y_test, col = None):
@@ -49,8 +52,8 @@ def XGBC_train(config, X, y, X_test, y_test, col = None):
            model = xgb.XGBClassifier(objective = 'multi:softmax' ,  num_class=3, eval_set=[(X_test, y_test)] ,eval_metric='mlogloss', verbosity=0, early_stopping_rounds = 10)
            model.fit(X,y,eval_set=[(X_test, y_test)], verbose = False)
         except ValueError as e:
-            model = xgb.XGBClassifier(objective = 'multi:softmax' ,  num_class=2, eval_set=[(X_test, y_test)] ,eval_metric='mlogloss', verbosity=0, early_stopping_rounds = 10)
-            model.fit(X,y,eval_set=[(X_test, y_test)], verbose = False)
+            model = xgb.XGBClassifier(objective = 'binary:logistic' ,eval_metric='mlogloss', verbosity=0)
+            model.fit(X,y,verbose = False)
         return model
 
 def tree_performance_classification(y_test, y_pred):
@@ -63,14 +66,12 @@ def tree_performance_classification(y_test, y_pred):
 def shap_vis(model, X_train, y_str):
     #Create the SHAP Explainer
     explainer = shap.TreeExplainer(model)
-    
     #Calculate SHAP values for the test set
     shap_values = explainer.shap_values(X_train)
-
     #Summary plot
     shap.summary_plot(shap_values, X_train, plot_type="bar")
     plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\xgbclassifier_results\SHAP\{y_str}.png')
+    plt.savefig(fr'results/XGBC results/SHAP/{y_str}.png')
     plt.close()
 
 def export_and_plot_feature_importances(best_model, X, y):
@@ -91,7 +92,7 @@ def export_and_plot_feature_importances(best_model, X, y):
     }).sort_values(by='Importance', ascending=False)
 
     #Export to CSV
-    csv_filename = fr'results\xgbclassifier_results\feature importance\feature_importance_csv\{identifier}_feature_importances.csv'
+    csv_filename = fr'results/XGBC results/feature importance/feature_importance_csv/{identifier}_feature_importances.csv'
     feature_importances_df.to_csv(csv_filename, index=False)
     #print(f"Feature importances exported to {csv_filename}")
 
@@ -100,16 +101,45 @@ def export_and_plot_feature_importances(best_model, X, y):
     plt.yticks(fontsize=5)
     plt.tight_layout()
     plot_importance(best_model, max_num_features=15, importance_type='weight')
-    plot_filename = fr'results\xgbclassifier_results\feature importance\feature_importance_vis\{identifier}_accuracy_visual.png'
+    plot_filename = fr'results/XGBC results/feature importance/feature_importance_vis/{identifier}_accuracy_visual.png'
     plt.savefig(plot_filename)
     plt.close()
     #print(f"Feature importance plot saved to {plot_filename}")
 
-def xgbc_complete(config, X, y, y_str):
+def plot_confusion_matrix(y_test, y_pred, class_names=['Class 0', 'Class 1']):
+    # Compute confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+    
+    # Print unique values to debug
+    print("Unique values in y_test:", np.unique(y_test, return_counts=True))
+    print("Unique values in y_pred:", np.unique(y_pred, return_counts=True))
+    
+    # Print confusion matrix for debugging
+    print("Confusion Matrix:\n", cm)
+    
+    # Create the plot
+    plt.figure(figsize=(10, 7))
+    ax = sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+    
+    # Fix the annotations in the heatmap
+    for text in ax.texts:
+        text.set_size(12)
+    
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.title('Confusion Matrix')
+    plot_filename = 'results/XGBC results/confusion matrix/cfm.png'
+    plt.savefig(plot_filename)
+    plt.close()
+
+
+def xgbc_complete(config, train_df, test_df, y_str):
     #if config enables XGBRegressor, then start process of training 
-    if config.getboolean('XGBClassifier', 'classifier'):
-      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-      #Train the model 
+    if config.getboolean('XGBClassifier', 'classifier'):      #Train the model 
+      y_train = train_df[f'{y_str}.encoded']
+      X_train = train_df.drop(columns =[f'{y_str}.encoded', y_str], axis=1)
+      y_test = test_df[f'{y_str}.encoded']
+      X_test = test_df.drop(columns = [f'{y_str}.encoded', y_str], axis=1)
       model = XGBC_train(config, X_train, y_train, X_test, y_test, y_str)
       #Make predictions and save as pred
       y_pred = model.predict(X_test)
@@ -117,11 +147,43 @@ def xgbc_complete(config, X, y, y_str):
       accuracy, precision, recall, f1 = tree_performance_classification(y_test, y_pred)
       print(f'XGB: Acc: {accuracy}, Prec: {precision}, Rec: {recall}, F1: {f1}')
       #evalate feature importance
-      export_and_plot_feature_importances(model, X, y_str)
+      export_and_plot_feature_importances(model, X_train, y_str)
       #shap_vis(model, X_train, y_str)
+      plot_confusion_matrix(y_test, y_pred)
       return model, accuracy, precision, recall, f1
     else:
        return None
+
+def kfolds_xgbc(k, config, y_str):
+    acc_list = []
+    prec_list = []
+    rec_list = [] 
+    f1_list = []
+    for i in range(1, k+1):
+        train_df = pd.read_csv(f'data/kfold/train/train_fold_{i}.csv')
+        test_df = pd.read_csv(f'data/kfold/test/test_fold_{i}.csv')
+        model, acc, prec, rec, f1 = xgbc_complete(config, train_df, test_df, y_str)
+        acc_list.append(acc)
+        prec_list.append(prec)
+        rec_list.append(rec)
+        f1_list.append(f1)
+
+    metrics = ['ACC', 'PREC', 'REC', 'F1']
+    means = [np.mean(acc_list), np.mean(prec_list), np.mean(rec_list), np.mean(f1_list)]
+    stds = [np.std(acc_list), np.std(prec_list), np.std(rec_list), np.std(f1_list)]
+
+    df = pd.DataFrame({
+        'Name': [config['general']['exp_name']]* len(metrics),
+        'Model': ['xgbc'] * len(metrics),
+        'Target': ['Composite.Trust.Narrow.Combined'] * len(metrics),
+        'Metric': metrics,
+        'Mean': means,
+        'Std': stds
+    })
+    
+    return df
+
+
 
 
 

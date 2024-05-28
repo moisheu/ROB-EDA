@@ -7,14 +7,20 @@ results/XGB figures/accuracy vis/*
 results/XGB figures/feature importance/*
 results/XGB figures/SHAP/*
 results/XGB figures/xgbfir/*
-results/xgbclassifier_results/feature importance/feature_importance_csv/*
-results/xgbclassifier_results/feature importance/feature_importance_vis/*
-results/xgbclassifier_results/SHAP/*
+results/XGBC results/feature importance/feature_importance_csv/*
+results/XGBC results/feature importance/feature_importance_vis/*
+results/XGBC results/SHAP/*
 results/LGBM results/*
 results/LGBMR results/*
 results/MLR results/*
 results/RF results/*
 results/RFR results/*
+results/XGBC results/feature importance/feature_importance_vis/*
+results/XGBC results/feature importance/feature_importance_csv/*
+data/kfold/train/*
+data/kfold/test/*
+results/Metrics/*
+results/XGBC results/confusion matrix/*
 
 /venv
 /.vscode
@@ -36,9 +42,9 @@ results/RFR results/*
 !results/XGB figures/feature importance/.gitkeep
 !results/XGB figures/SHAP/.gitkeep
 !results/XGB figures/xgbfir/.gitkeep
-!results/xgbclassifier_results/feature importance/feature_importance_csv/.gitkeep
-!results/xgbclassifier_results/feature importance/feature_importance_vis/.gitkeep
-!results/xgbclassifier_results/SHAP/.gitkeep
+!results/XGBC results/feature importance/feature_importance_csv/.gitkeep
+!results/XGBC results/feature importance/feature_importance_vis/.gitkeep
+!results/XGBC results/SHAP/.gitkeep
 !results/LGBM results/.gitkeep
 !results/LGBMR results/.gitkeep
 !results/LogReg results/SHAP/.gitkeep
@@ -47,3 +53,7 @@ results/RFR results/*
 !results/RF results/.gitkeep
 !results/RFR results/.gitkeep
 !results/SVR results/.gitkeep
+!data/kfold/train/.gitkeep
+!data/kfold/test/.gitkeep
+!results/Metrics/.gitkeep
+!results/XGBC results/confusion matrix/.gitkeep
