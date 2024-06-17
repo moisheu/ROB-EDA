@@ -4,13 +4,17 @@ import ast
 import pandas as pd
 import configparser 
 import ast 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn import preprocessing
 import shutil
+import os
+import shutil
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
+from imblearn.over_sampling import SMOTE
 
-def config_setup():
+def config_setup(config_in):
       config = configparser.ConfigParser()
-      config.read('config.ini')
+      config.read(config_in)
       return config 
 
 def load_dataframe(config):
@@ -18,11 +22,8 @@ def load_dataframe(config):
     raw_df = pd.read_csv(config['preprocessing']['raw_path'])
     return std_df , raw_df
 
-import os
-import shutil
-
 def clear_directory(directory_path):
-    # Check if the directory exists
+    #check if the directory exists
     if not os.path.exists(directory_path):
         print(f"The directory '{directory_path}' does not exist.")
         return
@@ -105,33 +106,81 @@ def get_dataframes(config):
         drop_columns(df, config)
 
 def apply_encoding(config,df):
-    column = config['general']['target']
-    #encode based on 2 classes
-    def encode(x):
-        quantiles = df[column].quantile([.5])
-        threshold = quantiles.loc[0.5]
-        if x >= threshold:
-            return 1
-        else:
-            return 0
-    df.loc[:, f'{column}.encoded'] = df[column].apply(encode)
-    return df    
+    target  = config['general']['target']
+    #determine if the split will be absolute or relative 
+    if config.getboolean('preprocessing', 'absolute_split'): 
+        def encode(x):
+            threshold = 18
+            if x >= threshold:
+                return 1
+            else:
+                return 0
+            
+        df.loc[:, f'{target}.encoded'] = df[target].apply(encode)
+        return df 
 
-def split_into_kfolds(df, k):
-    kf = KFold(n_splits=k, shuffle=True, random_state=42)
-    fold_indices = list(kf.split(df))
+    elif config.getboolean('preprocessing', 'absolute_split') is False: 
+        def encode(x):
+            quantiles = df[target].quantile([.5])
+            threshold = quantiles.loc[0.5]
+            if x >= threshold:
+                return 1
+            else:
+                return 0
+            
+        df.loc[:, f'{target}.encoded'] = df[target].apply(encode)
+        return df 
+    else: 
+        return None 
+
+from sklearn.model_selection import StratifiedKFold
+from imblearn.over_sampling import SMOTE
+import pandas as pd
+
+def split_into_kfolds(df, target, k):
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+    fold_indices = list(skf.split(df, df[f'{target}.encoded']))
 
     for i, (train_index, test_index) in enumerate(fold_indices):
         train_df = df.iloc[train_index]
         test_df = df.iloc[test_index]
+
+        #reset index
+        X_train = train_df.drop(columns=[f'{target}.encoded']).reset_index(drop=True)
+        y_train = train_df[f'{target}.encoded'].reset_index(drop=True)
         
+        #apply smote
+        smote = SMOTE(random_state=22)
+        X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+        train_resampled_df = pd.DataFrame(X_train_smote, columns=X_train.columns)
+        train_resampled_df[f'{target}.encoded'] = y_train_smote
+
         train_path = f'data/kfold/train/train_fold_{i+1}.csv'
         test_path = f'data/kfold/test/test_fold_{i+1}.csv'
         
-        train_df.to_csv(train_path, index=False)
+        train_resampled_df.to_csv(train_path, index=False)
         test_df.to_csv(test_path, index=False)
         
         print(f'Saved fold {i+1} to {train_path} and {test_path}')
     
     return fold_indices
 
+
+#clean up nan values and bootstrap them with means 
+def bootstrap_nans(df):
+    df = df.copy()
+    nan_cols = [i for i in df.columns if df[i].isnull().any()]
+    # Loop through each column with NaN values
+    for col in nan_cols: 
+        # Get the mean of that column
+        mean = df[col].mean()
+        # Replace NaN values with the mean value
+        df[col].fillna(mean, inplace=True)
+    return df
+
+def tree_performance(y_test, y_pred_df):
+    RMSE = mean_squared_error(y_test, y_pred_df, squared=False)
+    MSE = mean_squared_error(y_test, y_pred_df, squared=True)
+    MAPE = mean_absolute_percentage_error(y_test, y_pred_df)
+    MAE = mean_absolute_error(y_test, y_pred_df)
+    return RMSE, MSE, MAPE, MAE

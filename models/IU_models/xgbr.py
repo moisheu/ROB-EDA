@@ -1,6 +1,5 @@
 import xgboost as xgb
 from xgboost import XGBRegressor as xgbr
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import xgbfir
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -13,6 +12,7 @@ from sklearn.decomposition import PCA
 import shap 
 from skopt import BayesSearchCV 
 from skopt.space import Real,  Integer
+import utils 
 
 #Train the XGBRegressor if config settings are enabled 
 def XGBR_train(config, X_train, y_train, X_test,y_test): 
@@ -55,18 +55,12 @@ def XGBR_train(config, X_train, y_train, X_test,y_test):
     return best_model 
   #if bayesian search is not toggled, then normal XGBR instance will be called 
   else:
-    model = xgbr( n_estimators = 150, objective='reg:squarederror', verbose = False)
-    model.fit(X_train,y_train,eval_set=[(X_test, y_test)], eval_metric='rmse')
+    model = xgbr( n_estimators = 150, objective='reg:squarederror', eval_metric='rmse', max_depth = 4)
+    model.fit(X_train,y_train,eval_set=[(X_test, y_test)])
     #visualize importances 
     xgb.plot_importance(model)
     plt.close()
     return model
-
-def tree_performance(y_test, y_pred_df):
-    RMSE = mean_squared_error(y_test, y_pred_df, squared=False)
-    MSE = mean_squared_error(y_test, y_pred_df, squared=True)
-    MAPE = mean_absolute_percentage_error(y_test, y_pred_df)
-    return RMSE, MSE, MAPE
 
 def get_xgb_importance(model, feature_str):
     try:
@@ -126,8 +120,8 @@ def xgb_complete(config, train_df, test_df, y_str):
       y_pred = model.predict(X_test)
 
       #Evaluate performance
-      RMSE, MSE, MAPE = tree_performance(y_test, y_pred)
-      print(f'MSE: {MSE}, RMSE: {RMSE}, MAPE: {MAPE}')
+      RMSE, MSE, MAPE, MAE = utils.tree_performance(y_test, y_pred)
+      print(f'MSE: {MSE}, RMSE: {RMSE}, MAPE: {MAPE}, MAE: {MAE}')
 
       #Plot actual vs predicted values
       plt.figure(figsize=(8, 8))
@@ -141,7 +135,7 @@ def xgb_complete(config, train_df, test_df, y_str):
       get_xgb_importance(model, y_str)
       xgbfir.saveXgbFI(model, OutputXlsxFile=fr'results/XGB figures/xgbfir/{y_str}_xgbfir_results.xlsx')
       shap_viz(model, X_train, y_str)
-      return model, RMSE, MSE, MAPE
+      return model, RMSE, MSE, MAPE, MAE
     else:
        return None
 
@@ -149,17 +143,19 @@ def kfolds_xgbr(k, config, y_str):
     rmse_list = []
     mse_list = []
     mape_list = [] 
+    mae_list = []
     for i in range(1, k+1):
         train_df = pd.read_csv(f'data/kfold/train/train_fold_{i}.csv')
         test_df = pd.read_csv(f'data/kfold/test/test_fold_{i}.csv')
-        model, rmse, mse, mape = xgb_complete(config, train_df, test_df, y_str)
+        model, rmse, mse, mape, mae= xgb_complete(config, train_df, test_df, y_str)
         rmse_list.append(rmse)
         mse_list.append(mse)
         mape_list.append(mape)
+        mae_list.append(mae)
 
-    metrics = ['RMSE', 'MSE', 'MAPE']
-    means = [np.mean(rmse_list), np.mean(mse_list), np.mean(mape_list)]
-    stds = [np.std(rmse_list), np.std(mse_list), np.std(mape_list)]
+    metrics = ['RMSE', 'MSE', 'MAPE', 'MAE']
+    means = [np.mean(rmse_list), np.mean(mse_list), np.mean(mape_list), np.mean(mae_list)]
+    stds = [np.std(rmse_list), np.std(mse_list), np.std(mape_list), np.mean(mae_list)]
 
     df = pd.DataFrame({
         'Name': [config['general']['exp_name']]* len(metrics),

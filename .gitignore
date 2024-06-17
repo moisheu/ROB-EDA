@@ -21,6 +21,11 @@ data/kfold/train/*
 data/kfold/test/*
 results/Metrics/*
 results/XGBC results/confusion matrix/*
+results/DTC results/*
+results/NB results/*
+results/XGBC results/*
+experiment bin/*
+
 
 /venv
 /.vscode
@@ -57,3 +62,7 @@ results/XGBC results/confusion matrix/*
 !data/kfold/test/.gitkeep
 !results/Metrics/.gitkeep
 !results/XGBC results/confusion matrix/.gitkeep
+!results/DTC results/.gitkeep
+!results/NB results/.gitkeep
+!results/XGBC results/.gitkeep
+!experiment bin/.gitkeep
