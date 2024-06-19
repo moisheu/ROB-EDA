@@ -132,13 +132,13 @@ for experiment in experiment_queue:
 
     if config.getboolean('LogisticRegression', 'classifier'): 
         logreg_df = logreg.kfolds_logreg(k, config, target, name)   
-        evaluation_df_reg = pd.concat([evaluation_df_clf, logreg_df],ignore_index=True)
+        evaluation_df_clf = pd.concat([evaluation_df_clf, logreg_df],ignore_index=True)
     else:
         pass
 
     if config.getboolean('DTC', 'classifier'): 
         dtc_df = dtc.kfolds_dtc(k, config, target, name)   
-        evaluation_df_reg = pd.concat([evaluation_df_clf, dtc_df],ignore_index=True)
+        evaluation_df_clf = pd.concat([evaluation_df_clf, dtc_df],ignore_index=True)
     else:
         pass
 
@@ -153,19 +153,19 @@ for experiment in experiment_queue:
 
     if config.getboolean('NaiveBayes', 'classifier'): 
         nb_df = nb.kfolds_nb(k, config, target, name)   
-        evaluation_df_reg = pd.concat([evaluation_df_clf, nb_df],ignore_index=True)
+        evaluation_df_clf = pd.concat([evaluation_df_clf, nb_df],ignore_index=True)
     else:
         pass
 
     if config.getboolean('SVCLK', 'classifier'): 
         svc_lk_df = svc_lk.kfolds_svc_lk(k, config, target)   
-        evaluation_df_reg = pd.concat([evaluation_df_clf, svc_lk_df],ignore_index=True)
+        evaluation_df_clf = pd.concat([evaluation_df_clf, svc_lk_df],ignore_index=True)
     else:
         pass
 
     if config.getboolean('SVCRK', 'classifier'): 
         svc_rk_df = svc_rk.kfolds_svc_rk(k, config, target)   
-        evaluation_df_reg = pd.concat([evaluation_df_clf, svc_rk_df],ignore_index=True)
+        evaluation_df_clf = pd.concat([evaluation_df_clf, svc_rk_df],ignore_index=True)
     else:
         pass
 
