@@ -174,3 +174,35 @@ def kfolds_dtc(k, config, y_str, experiment_name):
     })
     
     return df
+
+def full_df_dtc(df, config, y_str, experiment_name):
+    acc_list = []
+    prec_list = []
+    rec_list = [] 
+    bal_acc_list = []
+    f1_list = []
+    auc_roc_list = []
+
+    train_df, test_df = train_test_split(df, test_size=0.2)
+    model, acc, prec, rec, bal_acc, f1, auc_roc = dtc_complete(config, train_df, test_df, y_str, 0, experiment_name)
+    acc_list.append(acc)
+    prec_list.append(prec)
+    rec_list.append(rec)
+    bal_acc_list.append(bal_acc)
+    f1_list.append(f1)
+    auc_roc_list.append(auc_roc)
+
+    metrics = ['ACC', 'PREC', 'REC', 'BAL_ACC', 'F1', 'AUC_ROC']
+    means = [np.mean(acc_list), np.mean(prec_list), np.mean(rec_list), np.mean(bal_acc_list), np.mean(f1_list), np.mean(auc_roc_list)]
+    stds = [np.std(acc_list), np.std(prec_list), np.std(rec_list),  np.std(bal_acc_list), np.std(f1_list), np.std(auc_roc_list)]
+
+    df = pd.DataFrame({
+        'Name': [config['general']['exp_name']]* len(metrics),
+        'Model': ['dtc'] * len(metrics),
+        'Target': ['Composite.Trust.Narrow.Combined'] * len(metrics),
+        'Metric': metrics,
+        'Mean': means,
+        'Std': stds
+    })
+    
+    return df

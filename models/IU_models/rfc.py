@@ -38,19 +38,24 @@ def RFC_train(config, X, y, X_test, y_test, col=None):
         model  = rf.fit(X, y)
         return model 
 
-def shap_vis(model, X_train, y_str):
-    #Create the SHAP Explainer
-    explainer = shap.TreeExplainer(model)
-    
-    #Calculate SHAP values for the test set
-    shap_values = explainer.shap_values(X_train)
+import shap
+import matplotlib.pyplot as plt
 
-    #Summary plot
-    plt.figure()
-    #shap.summary_plot(shap_values, X_train, show=False)
-    plt.title(f'{y_str} SHAP scores')
-    plt.savefig(fr'results\RF results\{y_str}.png')
-    plt.close()
+def shap_vis(model, X, y_str):
+
+    explainer = shap.Explainer(model)
+    shap_values = explainer(X)
+
+    # Plot the SHAP interaction values
+    shap_interaction_values = shap.TreeExplainer(model).shap_interaction_values(X)
+    
+    plt.figure(figsize=(10, 6))
+    #shap.summary_plot(shap_interaction_values, X, plot_type="dot", max_display=10)
+    plt.title('SHAP Interaction Values')
+    plt.xlabel('SHAP Interaction Value')
+    plt.ylabel('Features')
+    plt.show()
+
 
 def tree_performance_classification(y_test, y_pred, y_proba):
     accuracy = accuracy_score(y_test, y_pred)
@@ -79,7 +84,7 @@ def rfc_complete(config, train_df, test_df, y_str):
         print(f'RFC: Acc: {accuracy}, Prec: {precision}, Rec: {recall}, BALANCED ACC: {balanced_acc}, F1: {f1} , AUC ROC: {auc_roc}')
        
         #Evaluate feature importance
-        #shap_vis(model, X_train, y_str)
+        #shap_vis(model, X_test, y_str)
         return model, accuracy, precision, recall, balanced_acc, f1, auc_roc
     else:
         return None, None, None, None, None, None, None
@@ -111,6 +116,38 @@ def kfolds_rfc(k, config, y_str, experiment_name):
         'Name': [experiment_name] * len(metrics),
         'Model': ['rfc'] * len(metrics),
         'Target': [y_str] * len(metrics),
+        'Metric': metrics,
+        'Mean': means,
+        'Std': stds
+    })
+    
+    return df
+
+def full_df_rfc(df, config, y_str, experiment_name):
+    acc_list = []
+    prec_list = []
+    rec_list = [] 
+    bal_acc_list = []
+    f1_list = []
+    auc_roc_list = []
+
+    train_df, test_df = train_test_split(df, test_size=0.2)
+    model, acc, prec, rec, bal_acc, f1, auc_roc = rfc_complete(config, train_df, test_df, y_str)
+    acc_list.append(acc)
+    prec_list.append(prec)
+    rec_list.append(rec)
+    bal_acc_list.append(bal_acc)
+    f1_list.append(f1)
+    auc_roc_list.append(auc_roc)
+
+    metrics = ['ACC', 'PREC', 'REC', 'BAL_ACC', 'F1', 'AUC_ROC']
+    means = [np.mean(acc_list), np.mean(prec_list), np.mean(rec_list), np.mean(bal_acc_list), np.mean(f1_list), np.mean(auc_roc_list)]
+    stds = [np.std(acc_list), np.std(prec_list), np.std(rec_list),  np.std(bal_acc_list), np.std(f1_list), np.std(auc_roc_list)]
+
+    df = pd.DataFrame({
+        'Name': [config['general']['exp_name']]* len(metrics),
+        'Model': ['rfc'] * len(metrics),
+        'Target': ['Composite.Trust.Narrow.Combined'] * len(metrics),
         'Metric': metrics,
         'Mean': means,
         'Std': stds
