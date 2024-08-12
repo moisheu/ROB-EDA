@@ -24,7 +24,7 @@ results/XGBC results/confusion matrix/*
 results/DTC results/*
 results/NB results/*
 results/XGBC results/*
-experiment bin/*
+
 
 
 /venv
