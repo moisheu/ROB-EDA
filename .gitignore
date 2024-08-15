@@ -24,7 +24,12 @@ results/XGBC results/confusion matrix/*
 results/DTC results/*
 results/NB results/*
 results/XGBC results/*
-
+results/Notebook results/LDA Model/*
+results/Notebook results/LDA SHAP/Figs/*
+results/Notebook results/LDA SHAP/Scores/*
+results/Notebook results/XGB Model/*
+results/Notebook results/XGB SHAP/Figs/*
+results/Notebook results/XGB SHAP/Scores/*
 
 
 /venv
@@ -66,3 +71,9 @@ results/XGBC results/*
 !results/NB results/.gitkeep
 !results/XGBC results/.gitkeep
 !experiment bin/.gitkeep
+!results/Notebook results/LDA Model/.gitkeep
+!results/Notebook results/LDA SHAP/Figs/.gitkeep
+!results/Notebook results/LDA SHAP/Scores/.gitkeep
+!results/Notebook results/XGB Model/.gitkeep
+!results/Notebook results/XGB SHAP/Figs/.gitkeep
+!results/Notebook results/XGB SHAP/Scores/.gitkeep
